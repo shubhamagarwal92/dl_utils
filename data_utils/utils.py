@@ -1,4 +1,5 @@
-import re
+import re, json
+import torch
 
 # Turns a dictionary into a class
 class Dict2Class(object):      
@@ -140,3 +141,12 @@ def load_json(path: str) -> Any:
     with open(path, "r",  encoding="utf-8") as file:
         json_object = json.load(file)
     return json_object
+
+def get_base_name_from_hf_path(hf_path):
+    """
+    Can be something like: 
+    Eg. hf_path:  multi_x_science, shubhamagarwal92/rw_2308_filtered
+    """
+
+    base_name = os.path.split(hf_path)[1]
+    return base_name
