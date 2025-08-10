@@ -61,6 +61,25 @@ def postprocess_output(input_string):
     output_string = output_string.strip()
     return output_string
 
+def list_of_dicts_to_jsonl(data_list, output_file):
+    """
+    Converts a list of dictionaries to JSON Lines (JSONL) format.
+
+    Args:
+        data_list (list): A list of dictionaries to convert to JSONL format.
+        output_file (str): The path to the output JSONL file.
+
+    Returns:
+        None
+    """
+    with open(output_file, 'w', encoding='utf-8') as jsonl_file:
+        for data_dict in data_list:
+            # Convert the dictionary to a JSON string
+            json_string = json.dumps(data_dict)
+            
+            # Write the JSON string to the JSONL file with a newline separator
+            jsonl_file.write(json_string + '\n')
+
 def write_excel_df(
     df_list: List,
     sheet_name_list: List,
