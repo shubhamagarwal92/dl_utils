@@ -34,7 +34,6 @@ print(x.shape) # Outputs: torch.Size([2, 3, 4])
 print(x.shape[1]) # Outputs: 3
 
 
-
 # moving to device
 if torch.cuda.is_available():
     device = 'cuda'
@@ -69,6 +68,25 @@ print(x)
 # Output:
 # tensor([[7., 7., 7.],
 #         [7., 7., 7.]])
+
+
+# Compute log-softmax
+logits = torch.randn(4, 4)
+log_probs = torch.log_softmax(logits, dim=-1)  # Shape: (3, 4)
+
+
+## One-hot vectors
+targets = torch.tensor([1, 2, 3])
+# Step 2: One-hot encode targets
+one_hot = torch.nn.functional.one_hot(targets, num_classes=logits.size(-1)).float()
+# Or 
+batch_size = targets.size(0)
+num_classes = logits.size(-1)
+# Start with a zero matrix
+one_hot = torch.zeros(batch_size, num_classes, dtype=torch.float)
+# Fill 1 at the target class positions
+one_hot.scatter_(1, targets.unsqueeze(1), 1.0)
+print(one_hot)
 
 
 ## argsort, max, min
