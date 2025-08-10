@@ -59,6 +59,36 @@ sequence_tensor = torch.arange(10)
 stepped_tensor = torch.arange(5, 11, 2)
 
 
+# full 
+# explicit alternative to creating a tensor with zeros or ones() 
+# and then multiplying it by a scalar. 
+# Useful for creating padding masks or bias tensors.
+# Create a 2x3 tensor filled with the value 7.0
+x = torch.full((2, 3), 7.0)
+print(x)
+# Output:
+# tensor([[7., 7., 7.],
+#         [7., 7., 7.]])
+
+
+## argsort, max, min
+# commonly applied to the output of the final layer
+losses = torch.tensor([0.5, 0.1, 0.9, 0.3])
+# Get indices that would sort the tensor in ascending order
+sorted_indices = torch.argsort(losses)
+print(sorted_indices)
+# Output: tensor([1, 3, 0, 2])
+
+# Probabilities for 3 classes for a batch of 2
+predictions = torch.tensor([[0.2, 0.7, 0.1],
+                            [0.8, 0.1, 0.1]])
+
+# Get the index of the maximum value along the last dimension
+predicted_classes = torch.argmax(predictions, dim=-1)
+print(predicted_classes)
+
+
+
 ## Gather function 
 # Common in RL, Decoding, implementing sparse layers
 # For extracting specific elements from a tensor based on another tensor of indices
