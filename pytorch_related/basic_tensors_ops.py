@@ -22,6 +22,13 @@ y = x.view(16)
 z = x.reshape(2, 8)
 
 
+# Transpose
+attention_output = torch.randn(2,4,5) # [bs, sq_len, dim]
+attention_output = attention_output.transpose(1, 2)
+# After transpose, it is usually common to have contiguous to allow view on it
+attention_output = attention_output.contiguous().view(batch_size, -1, self.d_model)
+
+
 ## Size and shape
 # Shape is preferred in modern PyTorch for its conciseness
 x = torch.randn(2, 3, 4)
@@ -48,6 +55,12 @@ x = torch.randn(4, 4)
 upper_triangle = torch.triu(x)
 # Returns the lower triangular part of the matrix
 lower_triangle = torch.tril(x)
+# Example for creating causal mask:
+trg_seq_len = 5
+trg_mask = torch.tril(torch.ones(trg_seq_len, trg_seq_len)).bool()
+batch_size = 2
+num_heads = 4
+trg_mask = trg_mask.unsqueeze(0).unsqueeze(0).expand(batch_size, num_heads, trg_seq_len, trg_seq_len)
 
 
 # 1D tensor with a sequence of numbers, similar to Python's range()
@@ -73,7 +86,10 @@ print(x)
 # Compute log-softmax
 logits = torch.randn(4, 4)
 log_probs = torch.log_softmax(logits, dim=-1)  # Shape: (3, 4)
-
+# However in attention computatios we usualy compute softmax instead of 
+# log_softmax which is usually done at the output representations
+scores = torch.randn(2,4,5,5) # [bs, heads, sq_len, dim] # Attention scores
+attention_weights = nn.functional.softmax(scores, dim=-1)
 
 ## One-hot vectors
 targets = torch.tensor([1, 2, 3])
@@ -178,4 +194,18 @@ c = a.repeat(2, 1) # Shape: (2, 3)
 a[0] = 1 # Change back
 print(c) # Outputs tensor([[9, 2, 3], [1, 2, 3]])
 
+
+# register buffer
+# register_buffer => Tensor which is not a parameter, but should be part of the modules state.
+# Mostly used for Positional encodings
+# Used for tensors that need to be on the same device as the module.
+# persistent=False tells PyTorch to not add the buffer to the state dict (e.g. when we save the model)
+# https://discuss.pytorch.org/t/what-does-register-buffer-do/121091
+# https://discuss.pytorch.org/t/what-is-the-difference-between-register-buffer-and-register-parameter-of-nn-module/32723
+class PositionalEncoding(nn.Module):
+    def __init__(self, d_model, max_len=5000):
+        pe = torch.zeros(max_len, d_model)
+        # ....
+        # Some computations
+        self.register_buffer('pe', pe, persistent=False)
 
