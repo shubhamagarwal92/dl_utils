@@ -47,8 +47,17 @@ pd.concat([df1, df2], axis=1)  # columns
 # .copy() vs assignment
 df2 = df[['col']].copy()  # avoids SettingWithCopyWarning
 
-# apply function
+# apply function and vectorized operations
 df['col2'] = df['col1'].apply(lambda x: x**2)
+df['total'] = df['price'] * df['quantity']
+df['col3'] = df['col1'] + df['col2']
+
+# String based
+# Split string into multiple columns
+df[['first', 'last']] = df['full_name'].str.split(' ', expand=True)
+df['col'] = df['col'].str.strip().str.lower()
+# Filter rows containing substring
+df[df['name'].str.contains('John', case=False, na=False)]
 
 
 # Handle mismatched keys
@@ -59,6 +68,9 @@ pd.merge(df1, df2, on='id', how='inner')
 # group by
 df.groupby('category')['value'].mean().sort_values(ascending=False)
 
+df.groupby('country')['sales'].agg(['mean', 'max', 'min'])
+
+
 # EDA
 df['col'].hist()
 
@@ -66,6 +78,14 @@ df['col'].hist()
 df = pd.DataFrame({'a':[10,20,30]}, index=['x','y','z'])
 df.loc['x':'y']    # returns rows 'x' AND 'y' -- NOTE: y is included 
 df.iloc[0:2]       # returns rows at positions 0 and 1 (excludes pos 2)
+
+
+
+# Outliers
+Q1 = df['col'].quantile(0.25)
+Q3 = df['col'].quantile(0.75)
+IQR = Q3 - Q1
+outliers = df[(df['col'] < Q1 - 1.5*IQR) | (df['col'] > Q3 + 1.5*IQR)]
 
 
 
@@ -82,7 +102,6 @@ end_time = time.time()
 print(f"Time taken with for loop: {end_time - start_time} seconds")
 
 start_time = time.time()
-
 # Using a vectorized operation
 # Pandas applies the operation to the entire Series at once
 df['discounted_price_vectorized'] = df['price'] * 0.9
