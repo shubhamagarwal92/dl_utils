@@ -67,8 +67,13 @@ pd.merge(df1, df2, on='id', how='inner')
 
 # group by
 df.groupby('category')['value'].mean().sort_values(ascending=False)
-
+# Multiple aggregations
 df.groupby('country')['sales'].agg(['mean', 'max', 'min'])
+# pivot table
+df.pivot_table(index='country', columns='year', values='sales', aggfunc='sum')
+
+
+df[(df['age'] > 30) & (df['country'] == 'India')]
 
 
 # EDA
