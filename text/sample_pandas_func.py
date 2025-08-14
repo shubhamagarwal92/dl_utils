@@ -14,12 +14,12 @@ df.shape  # (rows, columns)
 
 # Check missing values
 df.isnull().sum()
+df.dropna()         # drop rows with NaN
+df.dropna(axis=1)   # drop columns with NaN
 
 # concat
 pd.concat([df1, df2], axis=0)  # rows
 pd.concat([df1, df2], axis=1)  # columns
 
-
-
-df.dropna()         # drop rows with NaN
-df.dropna(axis=1)   # drop columns with NaN
+# Handle mismatched keys
+pd.merge(df1, df2, on='id', how='outer')
