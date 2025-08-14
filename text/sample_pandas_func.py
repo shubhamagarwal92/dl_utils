@@ -31,14 +31,25 @@ df.columns
 df.dtypes
 df.shape  # (rows, columns)
 
+# describe
+df.describe()              # numeric columns
+df.describe(include='all') # all columns
+
+# Change dtype
+df['col'] = df['col'].astype(float)
+
 # Reset index
 df.reset_index(drop=True, inplace=True)
-
 
 # Check missing values
 df.isnull().sum()
 df.dropna()         # drop rows with NaN
 df.dropna(axis=1)   # drop columns with NaN
+df.drop_duplicates(inplace=True)
+# Fill na
+df['col'] = df['col'].fillna(0)
+df['col'] = df['col'].fillna(df['col'].mean())
+
 
 # concat
 pd.concat([df1, df2], axis=0)  # rows
@@ -58,6 +69,14 @@ df[['first', 'last']] = df['full_name'].str.split(' ', expand=True)
 df['col'] = df['col'].str.strip().str.lower()
 # Filter rows containing substring
 df[df['name'].str.contains('John', case=False, na=False)]
+
+# datetime
+df['date'] = pd.to_datetime(df['date'])
+df['year'] = df['date'].dt.year
+df['month'] = df['date'].dt.month
+df['day'] = df['date'].dt.day
+df[(df['date'] >= '2024-01-01') & (df['date'] <= '2024-06-30')]
+df['days_active'] = (df['end_date'] - df['start_date']).dt.days
 
 
 # Handle mismatched keys
