@@ -16,6 +16,16 @@ import torch
 import torchvision.transforms as T
 import uvicorn
 
+"""
+https://www.perplexity.ai/search/internvl-huggingface-dynamic-c-X_0QuNAnQbuq_XNavUq4sg 
+The dynamic cropping strategy operates through these steps:
+Aspect Ratio Matching: Computes the original image aspect ratio and finds the closest target aspect ratio from predefined options
+Tile Calculation: Determines the optimal number of tiles (between min_num and max_num) that minimize distortion
+Image Resizing: Resizes the image to match the target dimensions
+Tile Cropping: Divides the resized image into 448×448 pixel tiles
+Optional Thumbnail: Adds a thumbnail version if using multiple tiles
+"""
+
 
 def find_closest_aspect_ratio(aspect_ratio, target_ratios, width, height, image_size):
     best_ratio_diff = float('inf')
