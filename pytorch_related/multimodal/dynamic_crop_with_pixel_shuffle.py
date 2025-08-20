@@ -60,6 +60,13 @@ class CLIPVisionTower(nn.Module):
         return image_features
 
     def forward(self, images, glb_GN, sub_GN):
+        """
+        Grouped Normalization -- 
+        glb_GN = nn.Parameter(torch.zeros([1, 1, 4096]))
+        sub_GN = nn.Parameter(torch.zeros([1, 1, 1, 4096]))        
+        """
+        
+        
         if not self.is_loaded:
             self.load_model()
         assert type(images) is list
