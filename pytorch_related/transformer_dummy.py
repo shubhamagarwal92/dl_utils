@@ -11,6 +11,7 @@ class ScaledDotProductAttention(nn.Module):
         self.scale = head_dim ** 0.5
 
     def forward(self, Q, K, V, mask=None):
+        #SA: TODO This GPT code is not taking into account (B,H,T,D). Need to rewrite. 
         # Q,K,V: (B, T, d)
         scores = Q @ K.transpose(-2, -1) / self.scale   # (B, T, T)
         if mask is not None:
