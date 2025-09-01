@@ -1,3 +1,4 @@
+# Through multiple iterations with GPT to get the final code ;) 
 import torch
 import numpy as np
 
@@ -23,7 +24,7 @@ def knn_naive(X_train, y_train, X_test, k=3):
         y_pred.append(np.argmax(counts))
     return np.array(y_pred)
 
-def knn_batch(X_train, y_train, X_test, k=3):
+def knn_vectorized(X_train, y_train, X_test, k=3):
     """
     Fully vectorized KNN using broadcasting.
     X_train: (n_train, d)
@@ -84,37 +85,31 @@ def knn_torch_vectorized(X_train, y_train, X_test, k=3, num_classes=None, device
     # imp to create 1-hot vector
     if num_classes is None:
         num_classes = int(y_train.max().item() + 1)
-
     # Compute distances: (n_test, n_train)
     dists = torch.cdist(X_test, X_train)  # Euclidean distances
-
     # Indices of k nearest neighbors
     knn_idx = torch.topk(dists, k=k, largest=False).indices  # (n_test, k)
-
     # Gather neighbor labels: (n_test, k)
     knn_labels = y_train[knn_idx]
     print(f"knn_labels shape: {knn_labels.shape}")
-
     # One-hot encode and sum to get counts per class: (n_test, num_classes)
     one_hot = torch.zeros(n_test, k, num_classes, device=device) # (n_test, k, n_classes)
     print(f"one_hot shape: {one_hot.shape}")
     one_hot.scatter_(2, knn_labels.unsqueeze(-1), 1) # (n_test, k, n_classes); dim=2, idx=label; value=1
     class_counts = one_hot.sum(dim=1) # (n_test, n_classes)
     print(f"class_counts shape: {class_counts.shape}")
-
     # Predicted class: argmax per test point
     y_pred = class_counts.argmax(dim=1) # (n_test, )
     return y_pred
 
 
 if __name__ == "__main__":
-
     # Dummy dataset
     X_train = np.random.randn(100, 2)
     y_train = np.random.randint(0, 3, size=100)
     X_test = np.random.randn(10, 2)
     y_pred_naive = knn_naive(X_train, y_train, X_test, k=5)
-    y_pred_batch = knn_batch(X_train, y_train, X_test, k=5)
+    y_pred_batch = knn_vectorized(X_train, y_train, X_test, k=5)
     print("Naive:", y_pred_naive)
     print("Vector:", y_pred_batch)
     # PyTorch version
