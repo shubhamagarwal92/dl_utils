@@ -1,3 +1,4 @@
+# Through multiple iterations with GPT to get the final code ;) 
 import torch
 import torch.nn.functional as F
 
@@ -72,6 +73,66 @@ def top_p_sampling(logits, p=0.9, temperature=1.0, use_searchsorted=True):
   sampled_idx = torch.multinomial(filtered_probs, num_samples=1)
   return torch.gather(sorted_indices, -1, sampled_idx)
   
-  
+
+# ----------- Autoregressive Generation Loop -----------
+def generate(model, input_ids, max_new_tokens=20, strategy="greedy", temperature=1.0, k=50, p=0.9, eos_token_id=None):
+    batch_size = input_ids.size(0)
+    finished = torch.zeros(batch_size, dtype=torch.bool, device=input_ids.device)
+
+    # AR is always per token. Cant avoid it unless using vLLM.
+    for _ in range(max_new_tokens):
+        logits = model(input_ids)  # [batch, seq_len, vocab_size]
+        logits = logits[:, -1, :]  # last token logits
+
+        if strategy == "greedy":
+            next_token = greedy_sampling(logits)
+        elif strategy == "temperature":
+            next_token = temperature_sampling(logits, temperature)
+        elif strategy == "top-k":
+            next_token = top_k_sampling(logits, k, temperature)
+        elif strategy == "top-p":
+            next_token = top_p_sampling(logits, p, temperature)
+        else:
+            raise ValueError("Unknown strategy")
+
+        # If EOS handling
+        if eos_token_id is not None:
+            next_token = next_token.squeeze(-1)
+            next_token = torch.where(finished, torch.full_like(next_token, eos_token_id), next_token)
+            next_token = next_token.unsqueeze(-1)
+
+            # Update finished status
+            finished |= (next_token.squeeze(-1) == eos_token_id)
+
+            # If all sequences finished, break early
+            if finished.all():
+                input_ids = torch.cat([input_ids, next_token], dim=1)
+                break
+
+        input_ids = torch.cat([input_ids, next_token], dim=1)
+
+    return input_ids
+
+
+# Example usage (dummy model)
+class DummyModel(torch.nn.Module):
+    def __init__(self, vocab_size):
+        super().__init__()
+        self.vocab_size = vocab_size
+    def forward(self, x):
+        batch, seq_len = x.shape
+        return torch.randn(batch, seq_len, self.vocab_size)
+
+
+if __name__ == "__main__":
+    vocab_size = 10
+    eos_token_id = 9
+    model = DummyModel(vocab_size)
+    input_ids = torch.zeros((2, 1), dtype=torch.long)
+
+    print("Greedy:", generate(model, input_ids, strategy="greedy", eos_token_id=eos_token_id))
+    print("Temperature:", generate(model, input_ids, strategy="temperature", temperature=0.7, eos_token_id=eos_token_id))
+    print("Top-k:", generate(model, input_ids, strategy="top-k", k=5, eos_token_id=eos_token_id))
+    print("Top-p:", generate(model, input_ids, strategy="top-p", p=0.9, eos_token_id=eos_token_id))
   
   
