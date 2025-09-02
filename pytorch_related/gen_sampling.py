@@ -72,7 +72,35 @@ def top_p_sampling(logits, p=0.9, temperature=1.0, use_searchsorted=True):
   # Sample
   sampled_idx = torch.multinomial(filtered_probs, num_samples=1)
   return torch.gather(sorted_indices, -1, sampled_idx)
-  
+
+# ----------- Readable and better Top-p (Nucleus) Sampling -----------
+def top_p_sampling_v2(logits, p: float):
+    """
+    logits: [batch_size, vocab_size]
+    p: nucleus probability threshold (0 < p <= 1)
+    """
+    batch_size, vocab_size = logits.shape
+    # Step 1: sort logits (descending)
+    sorted_logits, sorted_indices = torch.sort(logits, descending=True, dim=-1)
+    # Step 2: compute cumulative probs
+    probs = F.softmax(sorted_logits, dim=-1) # [b, vocab]
+    cumulative_probs = torch.cumsum(probs, dim=-1)  # [b, vocab]
+    # Step 3: find cutoff index for each batch element
+    p_tensor = torch.full((batch_size, 1), p, device=logits.device)
+    cutoff = torch.searchsorted(cumulative_probs, p_tensor, right=True).squeeze(-1)  # [batch_size] bcoz of squeeze
+    # Step 4: create mask (broadcasting, no expand_as)    
+    mask = torch.arange(vocab_size, device=logits.device).unsqueeze(0) > cutoff.unsqueeze(1) # [batch, vocab] # broadcasting
+    # same as:  
+    # mask = torch.arange(vocab_size, device=logits.device)[None, :] > cutoff[:, None]  # [batch, vocab]
+    # Step 5: mask logits
+    filtered_logits = sorted_logits.masked_fill(mask, float('-inf'))
+    # Step 6: renormalize & sample
+    filtered_probs = F.softmax(filtered_logits, dim=-1)
+    sampled_idx = torch.multinomial(filtered_probs, num_samples=1)  # [batch, 1]
+    # Step 7: map back to original vocab indices
+    return torch.gather(sorted_indices, -1, sampled_idx)
+
+
 
 # ----------- Autoregressive Generation Loop -----------
 def generate(model, input_ids, max_new_tokens=20, strategy="greedy", temperature=1.0, k=50, p=0.9, eos_token_id=None):
